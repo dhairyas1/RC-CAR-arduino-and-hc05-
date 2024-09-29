@@ -1,16 +1,10 @@
-//RC CAR ARDUINO CODE: inmtegrating bluetooth module HC-05 with motors to run an RC car usign an adroid app on a mobile device
-#include<SoftwareSerial.h>
-
-SoftwareSerial blue(2,3); //RX , TX ( If 0,1 pins don't work.)
-
+//RC CAR ARDUINO CODE: integrating bluetooth module HC-05 with motors to run an RC car usign an adroid app on a mobile device
 int mleft = 6;
 int mright= 10;
-int diff =0;
 
 void setup()
 {
   Serial.begin(9600); 
-  blue.begin(9600);
 }
 
 void loop() 
