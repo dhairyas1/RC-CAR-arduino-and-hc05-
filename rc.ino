@@ -1,46 +1,71 @@
-//RC CAR ARDUINO CODE: integrating bluetooth module HC-05 with motors to run an RC car using an android app on a mobile device
-int leftMotorPin1 = 5;  // IN1 for left motor
-int leftMotorPin2 = 6;  // IN2 for left motor
-int rightMotorPin1 = 9; // IN1 for right motor
-int rightMotorPin2 = 10; // IN2 for right motor
+#include <SoftwareSerial.h>
+SoftwareSerial BTSerial(10, 11);  // RX | TX (Connect HC-05 TX to Pin 10, HC-05 RX to Pin 11)
 
-int leftMotorEnable = 3;  // ENA for left motor (PWM)
-int rightMotorEnable = 11; // ENB for right motor (PWM)
+int leftMotorPin1 = 8;  // IN1 for left motor
+int leftMotorPin2 = 7;  // IN2 for left motor
+int rightMotorPin1 = 5; // IN3 for right motor
+int rightMotorPin2 = 4; // IN4 for right motor
 
-int x;
-int y;
+int leftMotorEnable = 9;  // ENA for left motor (PWM)
+int rightMotorEnable = 3; // ENB for right motor (PWM)
 
-void setup()
-{
+String inputX = ""; // To build the X value
+String inputY = ""; // To build the Y value
+bool readingX = true;
+
+int leftv =0; 
+int rightv =0;
+
+void setup() {
+  Serial.begin(9600);   // Serial Monitor
+  BTSerial.begin(9600); // HC-05
+  Serial.println("Bluetooth Ready");
   pinMode(leftMotorPin1, OUTPUT);
   pinMode(leftMotorPin2, OUTPUT);
   pinMode(rightMotorPin1, OUTPUT);
   pinMode(rightMotorPin2, OUTPUT);
   pinMode(leftMotorEnable, OUTPUT);
   pinMode(rightMotorEnable, OUTPUT);
-  Serial.begin(9600); 
 }
 
-void loop() 
-{
+void loop() {
+  // Check if data is available from the HC-05 Bluetooth module
+  while (BTSerial.available()) {
+    char c = BTSerial.read(); // Read a single character from Bluetooth
+    Serial.print(c);       // Print received character (debugging)
+    if(readingX== false && c==':')
+      {
+        readingX = true;
+        Serial.println("new");
+        break;
+      }
+    else if(readingX)
+      {
+        inputX += c; //concatinating x input from joystick app.
+      }
+    else if (!readingX){
+        inputY += c; //concatenating y input from joystick app.
+      }
+    else if(c==':') //x axis and y axis coordintes are seperated by colons
+      {
+        readingX = false;
+      }
+  }
+  //type casting string to integral values
+   int x = inputX.toInt(); 
+   int y = inputY.toInt();
 
- if (Serial.available())
- {
-   char placeholder  = Serial.read();  //find x and y of analog stick
-
-   int ny = map(y,0,260 ,-255, 255);
-
-   int nx = map(x, 0 , 260 ,-255, 255);
+  //mapping values received to the left and right motors
   
-   int leftv= constrain(ny + nx , -255, 255);
-   int rightv= constrain(ny - nx, -255, 255);
-
-   if (leftv > 0 ){
+   leftv= map(y + x, 436, 124 , -255, 255); 
+   rightv= map(y - x,-156 ,156 ,-255, 255);
+  //passing the values mapped to motors and ensuring negative values result in the motor running backwards
+   if (leftv > 5 ){
      analogWrite(leftMotorEnable, leftv);
      digitalWrite(leftMotorPin1, HIGH);
      digitalWrite(leftMotorPin2, LOW);
    }
-   else if (leftv < 0 ){
+   else if (leftv < 5 ){
      analogWrite(leftMotorEnable, -leftv);
      digitalWrite(leftMotorPin1, LOW);
      digitalWrite(leftMotorPin2, HIGH);
@@ -48,20 +73,32 @@ void loop()
    else
    {
      analogWrite(leftMotorEnable, 0);
+     digitalWrite(leftMotorPin1, LOW);
+     digitalWrite(leftMotorPin2, LOW);
+
    }
 
-   if (rightv > 0 ){
+   if (rightv > 10 ){
      analogWrite(rightMotorEnable, rightv);
      digitalWrite(rightMotorPin1, HIGH);
      digitalWrite(rightMotorPin2, LOW);
    }
-   else if (rightv < 0 ){
-     analogWrite(rightMotorEnable, -tightv);
+   else if (rightv < -10 ){
+     analogWrite(rightMotorEnable, -rightv);
      digitalWrite(rightMotorPin1, LOW);
      digitalWrite(rightMotorPin2, HIGH);
    }
    else
    {
      analogWrite(rightMotorEnable, 0);
+     digitalWrite(leftMotorPin1, LOW);
+     digitalWrite(leftMotorPin2, LOW);
    }
- }
+//resetting values
+  leftv=0;
+  rightv=0;
+  inputX= "";
+  inputY= "";
+  delay(50);
+}
+
