@@ -33,7 +33,7 @@ void loop() {
   while (BTSerial.available()) {
     char c = BTSerial.read(); // Read a single character from Bluetooth
     Serial.print(c);       // Print received character (debugging)
-    if(readingX== false && c==':')
+    if(c=='\n')
       {
         readingX = true;
         Serial.println("new");
@@ -41,10 +41,10 @@ void loop() {
       }
     else if(readingX)
       {
-        inputX += c; //concatinating x input from joystick app.
+        inputX += String(c); //concatinating x input from joystick app.
       }
     else if (!readingX){
-        inputY += c; //concatenating y input from joystick app.
+        inputY += String(c); //concatenating y input from joystick app.
       }
     else if(c==':') //x axis and y axis coordintes are seperated by colons
       {
@@ -54,7 +54,15 @@ void loop() {
   //type casting string to integral values
    int x = inputX.toInt(); 
    int y = inputY.toInt();
-
+  //in the case a blank string is converted to int
+  if(x==0)
+  {
+     x = 140; 
+  }
+  if(y==0)
+  {
+     y = 140; 
+  }
   //mapping values received to the left and right motors
   
    leftv= map(y + x, 436, 124 , -255, 255); 
